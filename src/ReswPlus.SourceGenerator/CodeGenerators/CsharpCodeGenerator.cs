@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -144,7 +143,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
         }
 
         // Normalize the whitespace (formatting) and return the generated source code.
-        var code = "#nullable enable" + Environment.NewLine + compilationUnit.NormalizeWhitespace().ToFullString();
+        var code = "#nullable enable\n" + compilationUnit.NormalizeWhitespace().ToFullString();
         yield return new GeneratedFile(baseFilename + ".cs", code);
     }
 
