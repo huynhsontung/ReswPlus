@@ -17,16 +17,16 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v2
+        uses: nuget/setup-nuget@v4
 
       - name: Determine Build Configuration
         id: config
@@ -38,28 +38,35 @@ jobs:
             echo "BUILD_CONFIG=Release" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      - name: Restore Nuget
-        run: nuget restore ReswPlus.sln
-        working-directory: ${{ github.workspace }}
-
       - name: DotNet Restore
         run: dotnet restore ReswPlus.sln
-        working-directory: ${{ github.workspace }}
         
       - name: Build Solution
-        run: msbuild ReswPlus.sln /p:Configuration=${{ env.BUILD_CONFIG }} /p:Platform=x64 /p:PublishReadyToRun=false
-        working-directory: ${{ github.workspace }}
+        run: dotnet build src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration ${{ env.BUILD_CONFIG }}
 
       - name: Run Unit Tests
         run: dotnet test tests/ReswPlusUnitTests/ReswPlusUnitTests.csproj --configuration ${{ env.BUILD_CONFIG }} --no-build --verbosity normal
-        working-directory: ${{ github.workspace }}
 
-      - name: Pack NuGet Package (Only for Release and explicit request)
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release --no-build --output nupkg
-        working-directory: ${{ github.workspace }}
+      - name: Extract Version from NugetPackage.props
+        id: extract_version
+        run: |
+          [xml]$csproj = Get-Content "nuget\Starpine.ReswPlus.SourceGenerator.NugetPackage.props"
+          $version = "$($csproj.Project.PropertyGroup.FileVersion)-$(Get-Date -Format "yyyyMMddHHmm")"
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Push NuGet package
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: dotnet nuget push "**/nupkg/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
-        working-directory: ${{ github.workspace }}
+      - name: Pack Snapshot NuGet Package 
+        run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration ${{ env.BUILD_CONFIG }} --output nupkg -p:PackageId=Starpine.ReswPlus -p:FileVersion=${{ steps.extract_version.outputs.version }}
+
+      - name: Upload NuGet Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ReswPlus-NuGet-Packages
+          path: "**/nupkg/*.nupkg"
+
+      # - name: Pack NuGet Package (Only for Release and explicit request)
+      #   if: startsWith(github.ref, 'refs/tags/v')
+      #   run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release --no-build --output nupkg
+
+      # - name: Push NuGet package
+      #   if: startsWith(github.ref, 'refs/tags/v')
+      #   run: dotnet nuget push "**/nupkg/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
