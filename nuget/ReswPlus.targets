@@ -10,12 +10,4 @@
     <PropertyGroup>
         <AdditionalFileItemNames>$(AdditionalFileItemNames);PRIResource</AdditionalFileItemNames>
     </PropertyGroup>
-    <Target Name="ReswPlusEnsurePRIResourceItems" BeforeTargets="CoreCompile">
-        <ItemGroup>
-            <_ReswPlusCandidates Include="@(None)" Condition="'%(Extension)' == '.resw'" />
-            <_ReswPlusCandidates Include="@(Content)" Condition="'%(Extension)' == '.resw'" />
-            <_ReswPlusCandidates Include="@(EmbeddedResource)" Condition="'%(Extension)' == '.resw'" />
-            <PRIResource Include="@(_ReswPlusCandidates)" Exclude="@(PRIResource)" />
-        </ItemGroup>
-    </Target>
 </Project>
