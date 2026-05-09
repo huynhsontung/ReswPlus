@@ -778,7 +778,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
                                     Argument(IdentifierName("value")),
                                     Argument(TypeOfExpression(PredefinedType(Token(SyntaxKind.StringKeyword)))),
                                     Argument(IdentifierName("ConverterParameter")),
-                                    Argument(ParseExpression("global::System.Globalization.CultureInfo.CurrentUICulture.Name"))
+                                    Argument(ParseExpression("null!"))
                                 ])
                             )
                         )
