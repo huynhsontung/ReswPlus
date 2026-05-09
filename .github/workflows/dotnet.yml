@@ -21,31 +21,12 @@ jobs:
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
-
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v3
-
-      - name: Setup NuGet
-        uses: nuget/setup-nuget@v4
-
-      - name: Determine Build Configuration
-        id: config
-        shell: pwsh
-        run: |
-          if ("${{ github.event_name }}" -eq "pull_request") {
-            echo "BUILD_CONFIG=Debug" | Out-File -FilePath $env:GITHUB_ENV -Append
-          } else {
-            echo "BUILD_CONFIG=Release" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
-
-      - name: DotNet Restore
-        run: dotnet restore ReswPlus.sln
         
       - name: Build Solution
-        run: dotnet build src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration ${{ env.BUILD_CONFIG }}
+        run: dotnet build src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release
 
       - name: Run Unit Tests
-        run: dotnet test tests/ReswPlusUnitTests/ReswPlusUnitTests.csproj --configuration ${{ env.BUILD_CONFIG }} --no-build --verbosity normal
+        run: dotnet test tests/ReswPlusUnitTests/ReswPlusUnitTests.csproj --configuration Release --verbosity normal
 
       - name: Extract Version from NugetPackage.props
         id: extract_version
@@ -55,7 +36,7 @@ jobs:
           echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Pack Snapshot NuGet Package 
-        run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration ${{ env.BUILD_CONFIG }} --output nupkg -p:PackageId=Starpine.ReswPlus -p:FileVersion=${{ steps.extract_version.outputs.version }}
+        run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release --output nupkg -p:PackageId=Starpine.ReswPlus -p:FileVersion=${{ steps.extract_version.outputs.version }}
 
       - name: Upload NuGet Artifact
         uses: actions/upload-artifact@v7
