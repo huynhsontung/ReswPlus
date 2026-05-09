@@ -91,7 +91,8 @@ public partial class ReswSourceGenerator : IIncrementalGenerator
             OutputType = GetOption(options.GlobalOptions, "build_property.OutputType"),
             ProjectTypeGuids = GetOption(options.GlobalOptions, "build_property.projecttypeguids"),
             DefaultLanguage = GetOption(options.GlobalOptions, "build_property.DefaultLanguage"),
-            RootNamespace = GetOption(options.GlobalOptions, "build_property.RootNamespace")
+            RootNamespace = GetOption(options.GlobalOptions, "build_property.RootNamespace"),
+            UseUwp = GetOption(options.GlobalOptions, "build_property.UseUwp")
         });
 
         // Provider for additional files with .resw extension.
@@ -152,7 +153,9 @@ public partial class ReswSourceGenerator : IIncrementalGenerator
             }
 
             // Determine AppType based on referenced assemblies.
-            var appType = RetrieveAppType(compilation);
+            var appType = options.UseUwp?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false
+                ? AppType.UWP
+                : RetrieveAppType(compilation);
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
 
             switch (appType)
