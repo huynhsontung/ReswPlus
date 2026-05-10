@@ -43,4 +43,4 @@ jobs:
 
       - name: Push NuGet Package
         if: github.event_name == 'push'
-        run: dotnet nuget push "**/nupkg/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}"
+        run: dotnet nuget push "**/nupkg/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" -s "https://api.nuget.org/v3/index.json"
