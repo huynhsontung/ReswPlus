@@ -1,15 +1,12 @@
-name: Build, Test, and (Optionally) Publish ReswPlus
+name: Build, Test, and Publish ReswPlus
 
 on:
   push:
     branches:
       - main
     tags:
-      - 'v*'  # Runs only when a tag like v1.0.0 is pushed
+      - "v*" # Runs only when a tag like v1.0.0 is pushed
   pull_request:
-    branches:
-      - main
-  workflow_dispatch:  # Allows manual trigger via GitHub Actions UI
 
 jobs:
   build:
@@ -21,7 +18,7 @@ jobs:
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
-        
+
       - name: Build Solution
         run: dotnet build src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release
 
@@ -32,10 +29,10 @@ jobs:
         id: extract_version
         run: |
           [xml]$csproj = Get-Content "nuget\Starpine.ReswPlus.SourceGenerator.NugetPackage.props"
-          $version = "$($csproj.Project.PropertyGroup.FileVersion)-$(Get-Date -Format "yyyyMMddHHmm")"
+          $version = "$($csproj.Project.PropertyGroup.FileVersion)-$(Get-Date -Format "yyyyMMddHHmm")+${{ github.sha }}"
           echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Pack Snapshot NuGet Package 
+      - name: Pack Snapshot NuGet Package
         run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release --output nupkg -p:PackageId=Starpine.ReswPlus -p:FileVersion=${{ steps.extract_version.outputs.version }}
 
       - name: Upload NuGet Artifact
@@ -44,10 +41,6 @@ jobs:
           name: ReswPlus-NuGet-Packages
           path: "**/nupkg/*.nupkg"
 
-      # - name: Pack NuGet Package (Only for Release and explicit request)
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   run: dotnet pack src/ReswPlus.SourceGenerator/ReswPlus.SourceGenerator.csproj --configuration Release --no-build --output nupkg
-
-      # - name: Push NuGet package
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   run: dotnet nuget push "**/nupkg/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+      - name: Push NuGet Package
+        if: github.event_name == 'push'
+        run: dotnet nuget push "**/nupkg/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}"
