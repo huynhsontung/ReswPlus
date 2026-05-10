@@ -5,6 +5,7 @@
         <CompilerVisibleProperty Include="RootNamespace" />
         <CompilerVisibleProperty Include="DefaultLanguage" />
         <CompilerVisibleProperty Include="OutputType" />
+        <CompilerVisibleProperty Include="UseUwp" />
     </ItemGroup>
     <PropertyGroup>
         <AdditionalFileItemNames>$(AdditionalFileItemNames);PRIResource</AdditionalFileItemNames>
