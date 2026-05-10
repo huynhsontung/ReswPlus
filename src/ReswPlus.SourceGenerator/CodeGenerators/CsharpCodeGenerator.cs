@@ -143,7 +143,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
         }
 
         // Normalize the whitespace (formatting) and return the generated source code.
-        var code = compilationUnit.NormalizeWhitespace().ToFullString();
+        var code = "#nullable enable\n" + compilationUnit.NormalizeWhitespace().ToFullString();
         yield return new GeneratedFile(baseFilename + ".cs", code);
     }
 
@@ -346,7 +346,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
                 var overloadParameters = SeparatedList<ParameterSyntax>(
                     functionParameters.Select(p =>
                         Parameter(Identifier(p.Name))
-                        .WithType(p.IsVariantId ? PredefinedType(Token(SyntaxKind.ObjectKeyword)) : GetParameterTypeSyntax(p.Type))
+                        .WithType(p.IsVariantId ? ParseTypeName("object?") : GetParameterTypeSyntax(p.Type))
                     )
                 );
 
@@ -778,7 +778,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
                                     Argument(IdentifierName("value")),
                                     Argument(TypeOfExpression(PredefinedType(Token(SyntaxKind.StringKeyword)))),
                                     Argument(IdentifierName("ConverterParameter")),
-                                    Argument(LiteralExpression(SyntaxKind.NullLiteralExpression))
+                                    Argument(ParseExpression("null!"))
                                 ])
                             )
                         )
@@ -820,7 +820,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
                         )
                     ),
                 // Create the Converter property.
-                PropertyDeclaration(ParseTypeName("IValueConverter"), "Converter")
+                PropertyDeclaration(ParseTypeName("IValueConverter?"), "Converter")
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithAccessorList(
                         AccessorList(
@@ -834,7 +834,7 @@ internal sealed class CSharpCodeGenerator : ICodeGenerator
                         )
                     ),
                 // Create the ConverterParameter property.
-                PropertyDeclaration(PredefinedType(Token(SyntaxKind.ObjectKeyword)), "ConverterParameter")
+                PropertyDeclaration(ParseTypeName("object?"), "ConverterParameter")
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithAccessorList(
                         AccessorList(
